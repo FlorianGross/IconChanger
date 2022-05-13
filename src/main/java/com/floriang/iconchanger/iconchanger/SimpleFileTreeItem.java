@@ -2,6 +2,7 @@ package com.floriang.iconchanger.iconchanger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,9 +35,12 @@ public class SimpleFileTreeItem extends TreeItem<File> {
      *          which children should be gotten.
      */
     public SimpleFileTreeItem(File f, Node image) {
-        super(f);
+        super(f, image);
+        ImageView imageView = (ImageView) image;
+        imageView.setFitHeight(10);
+        imageView.setFitWidth(10);
     }
-
+    public SimpleFileTreeItem(File f){super(f);}
     /*
      * (non-Javadoc)
      *
@@ -91,11 +95,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                         .observableArrayList();
 
                 for (File childFile : files) {
-                    try {
-                        children.add(new SimpleFileTreeItem(childFile, getFileIcon(childFile)));
-                    }catch (IOException e){
-                        System.out.println("Error");
-                    }
+                        children.add(new SimpleFileTreeItem(childFile, new ImageView(new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString()))));
                 }
 
                 return children;
