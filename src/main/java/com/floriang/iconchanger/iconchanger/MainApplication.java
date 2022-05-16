@@ -2,11 +2,13 @@ package com.floriang.iconchanger.iconchanger;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -35,13 +37,7 @@ public class MainApplication extends Application {
         Menu menuHelp = new Menu("Help");
         MenuItem about = new MenuItem("About");
         File testFile;
-        menuItemOpen.setOnAction(event -> {
-            directoryChooser.setTitle("Open Folder");
-            File file = directoryChooser.showDialog(primaryStage);
-            if (file != null) {
-                treeView.setRoot(new SimpleFileTreeItem(file));
-            }
-        });
+        GridPane centerPane;
 
         menuHelp.getItems().add(about);
         menu.getMenus().addAll(menuFile, menuHelp);
@@ -62,13 +58,15 @@ public class MainApplication extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        treeView.setMaxWidth(600);
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(10, 10, 10, 10));
         gridPane.gridLinesVisibleProperty().set(true);
-
-        GridPane centerPane = generateGrid(testFile);
+        centerPane = generateGrid(testFile);
         ScrollPane scrollPane = new ScrollPane(centerPane);
-
+        scrollPane.setMaxWidth(370);
+        scrollPane.setMinWidth(370);
+        gridPane.setMaxWidth(600);
         splitPane.getItems().addAll(treeView, scrollPane, gridPane);
 
         Label previewDescription = new Label("Preview");
@@ -98,6 +96,17 @@ public class MainApplication extends Application {
 
         });
 
+        treeView.onMouseClickedProperty().set(event -> {
+            if (event.getClickCount() == 2) {
+                File file = treeView.getSelectionModel().getSelectedItem().getValue();
+                if (file.isDirectory()) {
+                    treeView.setRoot(new SimpleFileTreeItem(file, new ImageView((new Image("/folder.png")))));
+                    centerPane.getChildren().clear();
+                    centerPane.getChildren().add(generateGrid(file));
+                }
+            }
+        });
+
         Button submit = new Button("Submit");
         submit.setOnAction(event -> {
             ImageView iconImage = new ImageView(finalPreview.getImage());
@@ -110,14 +119,26 @@ public class MainApplication extends Application {
         gridPane.add(chooseFile, 1, 1);
         gridPane.add(submit, 1, 2);
 
+
+        menuItemOpen.setOnAction(event -> {
+            directoryChooser.setTitle("Open Folder");
+            File file = directoryChooser.showDialog(primaryStage);
+            if (file != null) {
+                treeView.setRoot(new SimpleFileTreeItem(file));
+                centerPane.getChildren().clear();
+                centerPane.getChildren().addAll(generateGrid(file));
+            }
+        });
+
         BorderPane root = new BorderPane();
         root.setTop(menus);
         root.setCenter(splitPane);
 
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1280, 960);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("FileRex");
+        primaryStage.setTitle("Icon Changer");
+        primaryStage.setResizable(true);
         primaryStage.show();
     }
 
@@ -128,7 +149,7 @@ public class MainApplication extends Application {
             int j = 0;
             Image image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
             for (int i = 0; i < Objects.requireNonNull(files).length; i++) {
-                gridPane.add(new SimpleFolderGridItem(files[i], image), i%3, j);
+                gridPane.add(new SimpleFolderGridItem(files[i], image), i % 3, j);
                 if (i % 3 == 0) {
                     j++;
                 }
@@ -137,14 +158,14 @@ public class MainApplication extends Application {
         return gridPane;
     }
 
-    public static void writeDesktopIni(File file) {
+    public static void writeDesktopIni() {
         File Folder = new File("/Users/florian/test/");
         try {
             Wini ini;
             try {
                 ini = new Wini(new File("/Users/florian/test/desktop.ini"));
             } catch (IOException ex) {
-                new File("/Users/florian/test/desktop.ini").createNewFile();
+                new File("/Users/florian/test/desktop.ini");
                 ini = new Wini(new File("/Users/florian/test/desktop.ini"));
             }
             if (ini.isEmpty()) {
