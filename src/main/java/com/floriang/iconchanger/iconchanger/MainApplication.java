@@ -18,9 +18,12 @@ import org.ini4j.Wini;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MainApplication extends Application {
+    public static List<File> selectedFolder = new ArrayList<>();
     public static void main(String[] args) {
         launch(args);
     }
@@ -58,15 +61,14 @@ public class MainApplication extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        treeView.setMaxWidth(600);
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(10, 10, 10, 10));
         gridPane.gridLinesVisibleProperty().set(true);
         centerPane = generateGrid(testFile);
+        centerPane.gridLinesVisibleProperty().set(true);
         ScrollPane scrollPane = new ScrollPane(centerPane);
-        scrollPane.setMaxWidth(370);
-        scrollPane.setMinWidth(370);
-        gridPane.setMaxWidth(600);
+        scrollPane.setMinWidth(500);
+        scrollPane.setMaxWidth(700);
         splitPane.getItems().addAll(treeView, scrollPane, gridPane);
 
         Label previewDescription = new Label("Preview");
