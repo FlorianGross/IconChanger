@@ -59,7 +59,7 @@ public class SimpleFolderGridItem extends Pane {
     public void setSelected(boolean selected) {
         isSelected = selected;
         if (selected) {
-            backgroundProperty().set(new Background(new BackgroundFill(Color.BLUE, null, null)));
+            backgroundProperty().set(new Background(new BackgroundFill(Color.LIGHTBLUE, null, null)));
         } else {
             backgroundProperty().set(new Background(new BackgroundFill(Color.WHITE, null, null)));
         }
