@@ -69,7 +69,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     public boolean isLeaf() {
         if (isFirstTimeLeaf) {
             isFirstTimeLeaf = false;
-            File f = (File) getValue();
+            File f =  getValue();
             isLeaf = f.isFile();
         }
 

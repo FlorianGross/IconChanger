@@ -17,20 +17,12 @@ public class ImageTest {
     private static void printFolderImagePath(File directory) {
         Wini wini;
         try {
-            if(new File(directory.getAbsolutePath()+"\\desktop.ini").createNewFile()){
-                wini = new Wini(new File("D:\\Downloads\\demo\\IconChanger\\src\\main\\resources\\desktop.ini"));
-                String field = "C:\\Users\\flori\\Desktop\\Folder.ico" + ",0";
-                wini.put(".ShellClassInfo", "IconResource", field);
-                wini.store();
+            if(new File(directory.getAbsolutePath()+ "\\desktop.ini").exists()){
+                wini = new Wini(new File(directory.getAbsolutePath()+ "\\desktop.ini"));
+                System.out.println(wini.get(".ShellClassInfo", "IconResource"));
             }else{
-                wini = new Wini(new File("D:\\Downloads\\demo\\IconChanger\\src\\main\\resources\\desktop.ini"));
-                String field = "C:\\Users\\flori\\Desktop\\Folder.ico" + ",0";
-                wini.put(".ShellClassInfo", "IconResource", field);
-                wini.store();
+                System.out.println("No desktop.ini found");
             }
-
-            Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + "D:\\Downloads\\demo\\IconChanger\\src\\main\\resources\\desktop.ini");
-            Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + "D:\\Downloads\\demo\\IconChanger\\src\\main\\resources\\");
         } catch (Exception e) {
             System.out.println("Error");
         }

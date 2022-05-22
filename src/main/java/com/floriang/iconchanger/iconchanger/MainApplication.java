@@ -101,9 +101,6 @@ public class MainApplication extends Application {
             }
         });
 
-        TextField tf = new TextField();
-        tf.setBackground(new Background(new BackgroundFill(Color.GRAY, CornerRadii.EMPTY, Insets.EMPTY)));
-        Label imageLabel = new Label("Link");
         Button submit = new Button("Submit");
         submit.setPrefWidth(rightPane.getPrefWidth());
         chooseFile.setPrefWidth(rightPane.getPrefWidth() / 2);
@@ -131,8 +128,6 @@ public class MainApplication extends Application {
         gridPane.setPadding(new Insets(50, 10, 50, 10));
         gridPane.add(preview, 0, 0);
         gridPane.add(chooseFile, 1, 0);
-        gridPane.add(imageLabel, 0, 2);
-        gridPane.add(tf, 1, 2);
         GridPane usedGrid = generateUsedGrid(prevUsedFolders);
         usedGrid.gridLinesVisibleProperty().set(true);
         rightPane.setCenter(new VBox(gridPane, usedGrid));
@@ -188,8 +183,9 @@ public class MainApplication extends Application {
                 selectedImageFile = imageFile;
                 finalPreview.setImage(imageFile);
             });
-            gridPane.add(image, i%3, j);
+            gridPane.add(image, i % 3, j);
         }
+        gridPane.setGridLinesVisible(true);
         return gridPane;
     }
 
@@ -197,20 +193,46 @@ public class MainApplication extends Application {
         GridPane gridPane = new GridPane();
         if (file.isDirectory()) {
             File[] files = file.listFiles();
-            int j = 0;
+            int j = 0, it = 0;
             for (int i = 0; i < Objects.requireNonNull(files).length; i++) {
-                Image image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
-
-                if (iconMap.containsKey(files[i])) {
-                    image = iconMap.get(files[i]);
-                }
-                gridPane.add(new SimpleFolderGridItem(files[i], image), i % 3, j);
-                if (i % 3 == 0) {
-                    j++;
+                if (files[i].isDirectory()) {
+                    File imageFile = printFolderImagePath(files[i]);
+                    Image image;
+                    if (imageFile == null) {
+                        image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+                    } else {
+                        image = new Image(imageFile.toURI().toString());
+                    }
+                    if (iconMap.containsKey(files[i])) {
+                        image = iconMap.get(files[i]);
+                    }
+                    gridPane.add(new SimpleFolderGridItem(files[i], image), it++ % 3, j);
+                    if (it % 3 == 0) {
+                        j++;
+                    }
                 }
             }
         }
         return gridPane;
+    }
+
+    private static File printFolderImagePath(File directory) {
+        Wini wini;
+        try {
+            if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
+                wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
+                System.out.println(wini.get(".ShellClassInfo", "IconResource"));
+                String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
+                File file = new File(path);
+                return file;
+            } else {
+                System.out.println("No desktop.ini found");
+                return null;
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+            return null;
+        }
     }
 
     public static void writeDesktopIni() {
@@ -229,8 +251,8 @@ public class MainApplication extends Application {
             String field = "/Users/florian/download/Folder.ico" + ",0";
             ini.put(".ShellClassInfo", "IconResource", field);
             ini.store();
-            //Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + "/Users/florian/test/desktop.ini");
-            //Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + "/Users/florian/test/");
+            Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + "/Users/florian/test/desktop.ini");
+            Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + "/Users/florian/test/");
 
         } catch (IOException ex) {
             System.out.println("Error: " + ex.getMessage());

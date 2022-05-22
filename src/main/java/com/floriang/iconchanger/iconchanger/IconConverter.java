@@ -1,12 +1,10 @@
 package com.floriang.iconchanger.iconchanger;
 
-//import net.sf.image4j.codec.ico.ICODecoder;
-//import net.sf.image4j.codec.ico.ICOEncoder;
+import net.sf.image4j.codec.ico.ICODecoder;
+import net.sf.image4j.codec.ico.ICOEncoder;
 
 //import net.ifok.image.image4j.codec.ico.ICODecoder;
 //import net.ifok.image.image4j.codec.ico.ICOEncoder;
-import net.ifok.image.image4j.codec.ico.ICODecoder;
-import net.ifok.image.image4j.codec.ico.ICOEncoder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
