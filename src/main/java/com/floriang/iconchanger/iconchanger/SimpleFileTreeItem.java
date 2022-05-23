@@ -1,6 +1,7 @@
 package com.floriang.iconchanger.iconchanger;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import javafx.collections.FXCollections;
@@ -9,8 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import static com.floriang.iconchanger.iconchanger.MainApplication.getFile;
+import org.ini4j.Wini;
 
 /**
  * @author Alexander Bolte - Bolte Consulting (2010 - 2014).
@@ -33,9 +33,9 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         ImageView imageView = (ImageView) image;
         imageView.setFitHeight(10);
         imageView.setFitWidth(10);
-        if(f.equals(MainApplication.rootFile)){
+        if (f.equals(MainApplication.rootFile)) {
             setExpanded(true);
-        }else{
+        } else {
             setExpanded(false);
         }
     }
@@ -82,24 +82,20 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     private ObservableList<TreeItem<File>> buildChildren(TreeItem<File> TreeItem) {
         File f = TreeItem.getValue();
         if (f != null && f.isDirectory()) {
-            File[] files = f.listFiles();
+            File[] files = f.listFiles(File::isDirectory);
             if (files != null) {
                 ObservableList<TreeItem<File>> children = FXCollections
                         .observableArrayList();
 
                 for (File childFile : files) {
-                    File imageFile = printFolderImagePath(childFile);
                     Image image;
-                    if (imageFile == null) {
-                        image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
-                    } else {
-                        try {
-                            File iconImage = IconConverter.icoToPng(imageFile);
-                            assert iconImage != null;
-                            image = new Image(iconImage.toURI().toString());
-                        } catch (Exception e) {
+                    try {
+                        image = getImageFromDesktopIni(childFile);
+                        if (image == null) {
                             image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
                         }
+                    } catch (Exception e) {
+                        image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
                     }
                     children.add(new SimpleFileTreeItem(childFile, new ImageView(image)));
                 }
@@ -111,8 +107,15 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         return FXCollections.emptyObservableList();
     }
 
-    private static File printFolderImagePath(File directory) {
-        return getFile(directory);
+    Image getImageFromDesktopIni(File file) throws IOException {
+        if (file.isDirectory()) {
+            if (new File(file.getAbsolutePath() + "\\desktop.ini").exists()) {
+                Wini ini = new Wini(new File(file.getAbsolutePath() + "\\desktop.ini"));
+                String pathToIcon = ini.get(".ShellClassInfo", "IconResource").split(",")[0];
+                return new Image(IconConverter.icoToPng(new File(pathToIcon)).toString());
+            }
+        }
+        return null;
     }
 
     private boolean isFirstTimeChildren = true;

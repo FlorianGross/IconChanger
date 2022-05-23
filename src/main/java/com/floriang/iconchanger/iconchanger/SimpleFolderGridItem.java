@@ -12,10 +12,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import org.ini4j.Wini;
-
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 public class SimpleFolderGridItem extends Pane {
     File file;
@@ -33,6 +32,7 @@ public class SimpleFolderGridItem extends Pane {
                 imageView = new ImageView(getImageFromDesktopIni(file));
             }
         } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
             imageView = new ImageView(image);
         }
         imageView.setFitHeight(100);
@@ -73,22 +73,10 @@ public class SimpleFolderGridItem extends Pane {
         if (file.isDirectory()) {
             if (new File(file.getAbsolutePath() + "\\desktop.ini").exists()) {
                 Wini ini = new Wini(new File(file.getAbsolutePath() + "\\desktop.ini"));
-                String pathToIcon = ini.get(".ShellClassInfo", "IconResource");
-                return new Image(IconConverter.icoToPng(new File(pathToIcon)).getAbsolutePath());
+                String pathToIcon = ini.get(".ShellClassInfo", "IconResource").split(",")[0];
+                return new Image(IconConverter.icoToPng(new File(pathToIcon)).toString());
             }
         }
         return null;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public Image getImage() {
-        return image;
-    }
-
-    public boolean isSelected() {
-        return isSelected;
     }
 }

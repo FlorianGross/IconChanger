@@ -22,7 +22,7 @@ public class MainApplication extends Application {
     public static Map<File, Image> iconMap = new java.util.HashMap<>();
     public static List<Image> prevUsedFolders = new ArrayList<>();
     private ImageView finalPreview;
-    public static Image selectedImageFile;
+    public static File selectedImageFile;
     public static GridPane centerPane;
     public static TreeView<File> treeView;
     public static File rootFile;
@@ -52,7 +52,7 @@ public class MainApplication extends Application {
         treeView = new TreeView<>();
         fileChooser = new FileChooser();
         directoryChooser = new DirectoryChooser();
-        selectedImageFile = new Image("/folder.png");
+        selectedImageFile = new File("/folder.png");
         fileChooser = new FileChooser();
         directoryChooser = new DirectoryChooser();
 
@@ -110,9 +110,10 @@ public class MainApplication extends Application {
             if (file != null) {
                 try {
                     for (File f : file) {
-                        selectedImageFile = new Image(f.toURI().toURL().toString());
-                        finalPreview.setImage(selectedImageFile);
-                        prevUsedFolders.add(selectedImageFile);
+                        selectedImageFile = f;
+                        Image selectedImage = new Image(selectedImageFile.toURI().toURL().toString());
+                        finalPreview.setImage(selectedImage);
+                        prevUsedFolders.add(selectedImage);
                     }
                     usedGrid.getChildren().clear();
                     usedGrid.getChildren().addAll(generateUsedGrid(prevUsedFolders));
@@ -191,17 +192,16 @@ public class MainApplication extends Application {
 
         submit.setOnAction(event -> {
             try {
-                writeDesktopIni(selectedFolder.get(0), IconConverter.pngToIco(new File(selectedImageFile.getUrl())).getAbsolutePath());
+                writeDesktopIni(selectedFolder.get(0), IconConverter.pngToIco(selectedImageFile));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            ImageView iconImage = new ImageView(selectedImageFile);
+            ImageView iconImage = new ImageView(new Image(selectedImageFile.toURI().toString()));
             iconImage.setFitWidth(10);
             iconImage.setFitHeight(10);
             try {
                 treeView.getSelectionModel().getSelectedItem().setGraphic(iconImage);
             } catch (Exception e) {
-                System.out.println("No file selected");
             }
             for (File file : selectedFolder) {
                 iconMap.put(file, finalPreview.getImage());
@@ -231,7 +231,7 @@ public class MainApplication extends Application {
             imageView.setFitWidth(100);
             imageView.setFitHeight(100);
             imageView.onMouseClickedProperty().set(event -> {
-                selectedImageFile = image;
+                selectedImageFile = new File(image.getUrl());
                 finalPreview.setImage(image);
             });
             gridPane.add(imageView, it++ % 3, j);
@@ -300,26 +300,23 @@ public class MainApplication extends Application {
         }
     }
 
-    public static void writeDesktopIni(File directoryPath, String iconPath) {
+    public static void writeDesktopIni(File directoryPath, File iconPath) {
         try {
             Wini ini;
             if (directoryPath.isDirectory()) {
-                boolean successful = new File(directoryPath.getAbsolutePath() + "\\desktop.ini").createNewFile();
-                if (successful) {
-                    ini = new Wini(new File(directoryPath.getAbsolutePath() + "\\desktop.ini"));
+                new File(directoryPath.getAbsolutePath() + "\\desktop.ini").createNewFile();
+                File desktopIni = new File(directoryPath.getAbsolutePath() + "\\desktop.ini");
+                ini = new Wini(desktopIni);
 
-                    if (ini.isEmpty()) {
-                        return;
-                    }
-                    String field = iconPath + ",0";
-                    ini.put(".ShellClassInfo", "IconResource", field);
-                    ini.store();
-                    Runtime.getRuntime().exec("attrib +h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
-                    Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
-                }
+                String field = iconPath.getAbsolutePath() + ",0";
+                ini.put(".ShellClassInfo", "IconResource", field);
+                ini.store();
+                Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + desktopIni.getAbsolutePath());
+                Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath());
+                System.out.println("Desktop.ini written: " + desktopIni.getAbsolutePath());
             }
         } catch (IOException ex) {
-            System.out.println("Error: " + ex.getMessage());
+            System.out.println("Error Here: " + ex.getMessage());
         }
     }
 }
