@@ -45,7 +45,6 @@ public class SimpleFolderGridItem extends Pane {
         getChildren().add(label);
         label.setPadding(new Insets(10, 10, 10, 10));
         setOnMouseClicked(event -> {
-            System.out.println(event.toString());
             if (event.getButton() == MouseButton.PRIMARY) {
                 setSelected(true);
                 MainApplication.selectedFolder.add(file);
@@ -72,7 +71,6 @@ public class SimpleFolderGridItem extends Pane {
                 String pathToIcon = ini.get(".ShellClassInfo", "IconResource");
                 return new Image(IconConverter.icoToPng(new File(pathToIcon)).getAbsolutePath());
             }
-
         }
         return null;
     }

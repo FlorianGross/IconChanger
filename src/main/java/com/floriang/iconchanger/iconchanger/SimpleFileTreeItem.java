@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.ini4j.Wini;
 
 /**
  * @author Alexander Bolte - Bolte Consulting (2010 - 2014).
@@ -40,7 +41,11 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         imageView.setFitHeight(10);
         imageView.setFitWidth(10);
     }
-    public SimpleFileTreeItem(File f){super(f);}
+
+    public SimpleFileTreeItem(File f) {
+        super(f);
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -69,7 +74,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     public boolean isLeaf() {
         if (isFirstTimeLeaf) {
             isFirstTimeLeaf = false;
-            File f =  getValue();
+            File f = getValue();
             isLeaf = f.isFile();
         }
 
@@ -95,7 +100,20 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                         .observableArrayList();
 
                 for (File childFile : files) {
-                        children.add(new SimpleFileTreeItem(childFile, new ImageView(new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString()))));
+                    File imageFile = MainApplication.printFolderImagePath(childFile);
+                    Image image;
+                    if (imageFile == null) {
+                        image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+                    } else {
+                        try {
+                            File iconImage = IconConverter.icoToPng(imageFile);
+                            image = new Image(iconImage.toURI().toString());
+                        } catch (Exception e) {
+                            System.out.println("No icon found " + e);
+                            image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+                        }
+                    }
+                    children.add(new SimpleFileTreeItem(childFile, new ImageView(image)));
                 }
 
                 return children;
@@ -103,15 +121,6 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         }
 
         return FXCollections.emptyObservableList();
-    }
-
-    private Node getFileIcon(File file) throws IOException {
-        try {
-            return new ImageView(new Image(IconConverter.icoToPng(file).getAbsolutePath()));
-        } catch (Exception e) {
-            System.out.println("Error converting Image");
-        }
-        return new ImageView(new Image(IconConverter.icoToPng(new File("D:\\Downloads\\demo\\IconChanger\\src\\main\\resources\\com\\floriang\\iconchanger\\iconchanger\\folder.ico")).getAbsolutePath()));
     }
 
     private boolean isFirstTimeChildren = true;

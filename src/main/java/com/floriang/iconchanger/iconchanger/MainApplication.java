@@ -7,11 +7,11 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.ini4j.Wini;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -45,6 +45,7 @@ public class MainApplication extends Application {
         MenuItem about = new MenuItem("About");
         File testFile;
         GridPane centerPane;
+        selectedImageFile = new Image("/folder.png");
 
         menuHelp.getItems().add(about);
         menu.getMenus().addAll(menuFile, menuHelp);
@@ -52,11 +53,7 @@ public class MainApplication extends Application {
         VBox menus = new VBox();
         menus.getChildren().addAll(menu);
         SplitPane splitPane = new SplitPane();
-        if (IconConverter.isWindows) {
-            testFile = new File("C://");
-        } else {
-            testFile = new File("/");
-        }
+        testFile = new File(System.getProperty("user.home"));
         try {
             ImageView imageView = new ImageView((new Image("/folder.png")));
             imageView.setFitHeight(10);
@@ -80,7 +77,6 @@ public class MainApplication extends Application {
             preview.setFitWidth(100);
             preview.setFitHeight(100);
         } catch (Exception e) {
-            System.out.println("No file found");
             preview = new ImageView(new Image("/folder.png"));
         }
 
@@ -106,6 +102,11 @@ public class MainApplication extends Application {
         chooseFile.setPrefWidth(rightPane.getPrefWidth() / 2);
 
         submit.setOnAction(event -> {
+            try {
+                writeDesktopIni(selectedFolder.get(0), IconConverter.pngToIco(new File(selectedImageFile.getUrl())).getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             ImageView iconImage = new ImageView(selectedImageFile);
             iconImage.setFitWidth(10);
             iconImage.setFitHeight(10);
@@ -201,7 +202,13 @@ public class MainApplication extends Application {
                     if (imageFile == null) {
                         image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
                     } else {
-                        image = new Image(imageFile.toURI().toString());
+                        try {
+                            File iconImage = IconConverter.icoToPng(imageFile);
+                            image = new Image(iconImage.toURI().toString());
+                        } catch (Exception e) {
+                            System.out.println("No icon found " + e);
+                            image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+                        }
                     }
                     if (iconMap.containsKey(files[i])) {
                         image = iconMap.get(files[i]);
@@ -216,44 +223,39 @@ public class MainApplication extends Application {
         return gridPane;
     }
 
-    private static File printFolderImagePath(File directory) {
+    public static File printFolderImagePath(File directory) {
         Wini wini;
         try {
             if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
                 wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
-                System.out.println(wini.get(".ShellClassInfo", "IconResource"));
                 String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
                 File file = new File(path);
                 return file;
             } else {
-                System.out.println("No desktop.ini found");
                 return null;
             }
         } catch (Exception e) {
-            System.out.println("Error");
             return null;
         }
     }
 
-    public static void writeDesktopIni() {
-        File Folder = new File("/Users/florian/test/");
+    public static void writeDesktopIni(File directoryPath, String iconPath) {
         try {
             Wini ini;
-            try {
-                ini = new Wini(new File("/Users/florian/test/desktop.ini"));
-            } catch (IOException ex) {
-                new File("/Users/florian/test/desktop.ini");
-                ini = new Wini(new File("/Users/florian/test/desktop.ini"));
-            }
-            if (ini.isEmpty()) {
-                return;
-            }
-            String field = "/Users/florian/download/Folder.ico" + ",0";
-            ini.put(".ShellClassInfo", "IconResource", field);
-            ini.store();
-            Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + "/Users/florian/test/desktop.ini");
-            Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + "/Users/florian/test/");
+            if (directoryPath.isDirectory()) {
+                new File(directoryPath.getAbsolutePath() + "\\desktop.ini").createNewFile();
 
+                ini = new Wini(new File(directoryPath.getAbsolutePath() + "\\desktop.ini"));
+
+                if (ini.isEmpty()) {
+                    return;
+                }
+                String field = iconPath + ",0";
+                ini.put(".ShellClassInfo", "IconResource", field);
+                ini.store();
+                Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
+                Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
+            }
         } catch (IOException ex) {
             System.out.println("Error: " + ex.getMessage());
         }

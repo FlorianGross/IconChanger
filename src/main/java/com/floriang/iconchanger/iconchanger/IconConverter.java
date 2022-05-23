@@ -15,8 +15,8 @@ import java.util.List;
 //https://zetcode.com/articles/javaico/
 public class IconConverter {
     public static String os = System.getProperty("os.name").toLowerCase();
-    public static boolean isWindows = os.contains("win");
-    public static String iconDIr = "C:\\Users\\floriang\\Desktop\\icons\\";
+    public static String iconDIr = System.getProperty("user.home") + "\\Pictures\\";
+
     public static File pngToIco(File file) throws IOException {
         BufferedImage bi = ImageIO.read(file);
         ICOEncoder.write(bi, new File(iconDIr + file.getName() + ".ico"));
@@ -24,6 +24,7 @@ public class IconConverter {
     }
 
     public static File icoToPng(File file) throws IOException {
+        new File(iconDIr + "\\Icons").mkdir();
         List<BufferedImage> images = ICODecoder.read(file);
         ImageIO.write(images.get(0), "png", new File(iconDIr + file.getName() + ".png"));
         return new File(iconDIr + file.getName() + ".png");
