@@ -14,7 +14,6 @@ import javafx.scene.text.TextAlignment;
 import org.ini4j.Wini;
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 public class SimpleFolderGridItem extends Pane {
     File file;
@@ -26,10 +25,10 @@ public class SimpleFolderGridItem extends Pane {
         this.image = image;
         ImageView imageView;
         try {
-            if (getImageFromDesktopIni(file) == null) {
+            if (getImageFromIni(file) == null) {
                 imageView = new ImageView(image);
             } else {
-                imageView = new ImageView(getImageFromDesktopIni(file));
+                imageView = new ImageView(getImageFromIni(file));
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
@@ -69,7 +68,7 @@ public class SimpleFolderGridItem extends Pane {
         }
     }
 
-    Image getImageFromDesktopIni(File file) throws IOException {
+    static Image getImageFromIni(File file) throws IOException {
         if (file.isDirectory()) {
             if (new File(file.getAbsolutePath() + "\\desktop.ini").exists()) {
                 Wini ini = new Wini(new File(file.getAbsolutePath() + "\\desktop.ini"));

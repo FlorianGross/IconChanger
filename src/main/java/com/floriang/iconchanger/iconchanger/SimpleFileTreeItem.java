@@ -90,7 +90,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                 for (File childFile : files) {
                     Image image;
                     try {
-                        image = getImageFromDesktopIni(childFile);
+                        image = SimpleFolderGridItem.getImageFromIni(childFile);
                         if (image == null) {
                             image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
                         }
@@ -105,17 +105,6 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         }
 
         return FXCollections.emptyObservableList();
-    }
-
-    Image getImageFromDesktopIni(File file) throws IOException {
-        if (file.isDirectory()) {
-            if (new File(file.getAbsolutePath() + "\\desktop.ini").exists()) {
-                Wini ini = new Wini(new File(file.getAbsolutePath() + "\\desktop.ini"));
-                String pathToIcon = ini.get(".ShellClassInfo", "IconResource").split(",")[0];
-                return new Image(IconConverter.icoToPng(new File(pathToIcon)).toString());
-            }
-        }
-        return null;
     }
 
     private boolean isFirstTimeChildren = true;
