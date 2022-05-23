@@ -228,6 +228,7 @@ public class MainApplication extends Application {
         } else {
             try {
                 File iconImage = IconConverter.icoToPng(imageFile);
+                assert iconImage != null;
                 image = new Image(iconImage.toURI().toString());
             } catch (Exception e) {
                 image = new Image(Objects.requireNonNull(MainApplication.class.getResource("/folder.png")).toString());
@@ -243,6 +244,7 @@ public class MainApplication extends Application {
     static File getFile(File directory) {
         try {
             if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
+                @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
                 Wini wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
                 String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
                 return new File(path);
@@ -258,18 +260,19 @@ public class MainApplication extends Application {
         try {
             Wini ini;
             if (directoryPath.isDirectory()) {
-                new File(directoryPath.getAbsolutePath() + "\\desktop.ini").createNewFile();
+                boolean successful = new File(directoryPath.getAbsolutePath() + "\\desktop.ini").createNewFile();
+                if (successful) {
+                    ini = new Wini(new File(directoryPath.getAbsolutePath() + "\\desktop.ini"));
 
-                ini = new Wini(new File(directoryPath.getAbsolutePath() + "\\desktop.ini"));
-
-                if (ini.isEmpty()) {
-                    return;
+                    if (ini.isEmpty()) {
+                        return;
+                    }
+                    String field = iconPath + ",0";
+                    ini.put(".ShellClassInfo", "IconResource", field);
+                    ini.store();
+                    Runtime.getRuntime().exec("attrib +h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
+                    Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
                 }
-                String field = iconPath + ",0";
-                ini.put(".ShellClassInfo", "IconResource", field);
-                ini.store();
-                Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
-                Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath() + "\\desktop.ini");
             }
         } catch (IOException ex) {
             System.out.println("Error: " + ex.getMessage());
