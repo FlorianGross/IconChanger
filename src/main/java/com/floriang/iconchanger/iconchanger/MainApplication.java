@@ -2,6 +2,7 @@ package com.floriang.iconchanger.iconchanger;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -198,18 +199,7 @@ public class MainApplication extends Application {
             for (int i = 0; i < Objects.requireNonNull(files).length; i++) {
                 if (files[i].isDirectory()) {
                     File imageFile = printFolderImagePath(files[i]);
-                    Image image;
-                    if (imageFile == null) {
-                        image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
-                    } else {
-                        try {
-                            File iconImage = IconConverter.icoToPng(imageFile);
-                            image = new Image(iconImage.toURI().toString());
-                        } catch (Exception e) {
-                            System.out.println("No icon found " + e);
-                            image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
-                        }
-                    }
+                    Image image = getImage(imageFile);
                     if (iconMap.containsKey(files[i])) {
                         image = iconMap.get(files[i]);
                     }
@@ -221,6 +211,21 @@ public class MainApplication extends Application {
             }
         }
         return gridPane;
+    }
+
+    private Image getImage(File imageFile) {
+        Image image;
+        if (imageFile == null) {
+            image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+        } else {
+            try {
+                File iconImage = IconConverter.icoToPng(imageFile);
+                image = new Image(iconImage.toURI().toString());
+            } catch (Exception e) {
+                image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+            }
+        }
+        return image;
     }
 
     public static File printFolderImagePath(File directory) {

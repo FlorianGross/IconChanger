@@ -14,7 +14,6 @@ import java.util.List;
 
 //https://zetcode.com/articles/javaico/
 public class IconConverter {
-    public static String os = System.getProperty("os.name").toLowerCase();
     public static String iconDIr = System.getProperty("user.home") + "\\Pictures\\";
 
     public static File pngToIco(File file) throws IOException {
@@ -24,10 +23,13 @@ public class IconConverter {
     }
 
     public static File icoToPng(File file) throws IOException {
-        new File(iconDIr + "\\Icons").mkdir();
-        List<BufferedImage> images = ICODecoder.read(file);
-        ImageIO.write(images.get(0), "png", new File(iconDIr + file.getName() + ".png"));
-        return new File(iconDIr + file.getName() + ".png");
+        boolean mkdirSuccessful = new File(iconDIr + "\\Icons").mkdir();
+        if (mkdirSuccessful) {
+            List<BufferedImage> images = ICODecoder.read(file);
+            ImageIO.write(images.get(0), "png", new File(iconDIr + file.getName() + ".png"));
+            return new File(iconDIr + file.getName() + ".png");
+        }
+        return null;
     }
 
 }

@@ -100,7 +100,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                         .observableArrayList();
 
                 for (File childFile : files) {
-                    File imageFile = MainApplication.printFolderImagePath(childFile);
+                    File imageFile = printFolderImagePath(childFile);
                     Image image;
                     if (imageFile == null) {
                         image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
@@ -109,7 +109,6 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                             File iconImage = IconConverter.icoToPng(imageFile);
                             image = new Image(iconImage.toURI().toString());
                         } catch (Exception e) {
-                            System.out.println("No icon found " + e);
                             image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
                         }
                     }
@@ -121,6 +120,22 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         }
 
         return FXCollections.emptyObservableList();
+    }
+
+    private static File printFolderImagePath(File directory) {
+        Wini wini;
+        try {
+            if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
+                wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
+                String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
+                File file = new File(path);
+                return file;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean isFirstTimeChildren = true;

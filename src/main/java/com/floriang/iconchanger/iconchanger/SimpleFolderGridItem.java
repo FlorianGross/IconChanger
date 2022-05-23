@@ -75,4 +75,15 @@ public class SimpleFolderGridItem extends Pane {
         return null;
     }
 
+    public File getFile() {
+        return file;
+    }
+
+    public Image getImage() {
+        return image;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
 }
