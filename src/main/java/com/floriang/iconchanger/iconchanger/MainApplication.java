@@ -171,6 +171,7 @@ public class MainApplication extends Application {
 
     public static void setRoot(File file) {
         if (file.isDirectory()) {
+            rootFile = file;
             treeView.setRoot(new SimpleFileTreeItem(file, new ImageView((new Image("/folder.png")))));
             centerPane.getChildren().clear();
             centerPane.getChildren().add(generateGrid(file));
