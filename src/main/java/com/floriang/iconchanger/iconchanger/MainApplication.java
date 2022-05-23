@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.ini4j.Wini;
 
 import java.io.File;
@@ -22,11 +23,14 @@ public class MainApplication extends Application {
     public static List<Image> prevUsedFolders = new ArrayList<>();
     private ImageView finalPreview;
     public static Image selectedImageFile;
-
     public static GridPane centerPane;
     public static TreeView<File> treeView;
-
     public static File rootFile;
+
+    private static FileChooser fileChooser;
+    private static DirectoryChooser directoryChooser;
+
+    private static javafx.stage.Stage stage;
 
     public static void main(String[] args) {
         launch(args);
@@ -34,24 +38,31 @@ public class MainApplication extends Application {
 
     @Override
     public void start(javafx.stage.Stage primaryStage) {
+        stage = primaryStage;
+        BorderPane root = createBody(primaryStage);
+        Scene scene = new Scene(root, 1280, 960);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("IconChanger");
+        primaryStage.setResizable(true);
+        primaryStage.show();
+    }
+
+    private BorderPane createBody(Stage primaryStage) {
         treeView = new TreeView<>();
-        FileChooser fileChooser = new FileChooser();
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        MenuBar menu = new MenuBar();
-        Menu menuFile = new Menu("File");
-        MenuItem menuItemOpen = new MenuItem("Open");
-        menuFile.getItems().add(menuItemOpen);
-        Menu menuHelp = new Menu("Help");
-        MenuItem about = new MenuItem("About");
+        fileChooser = new FileChooser();
+        directoryChooser = new DirectoryChooser();
         selectedImageFile = new Image("/folder.png");
+        fileChooser = new FileChooser();
+        directoryChooser = new DirectoryChooser();
 
-        menuHelp.getItems().add(about);
-        menu.getMenus().addAll(menuFile, menuHelp);
-
+        // Create Menu Pane
         VBox menus = new VBox();
-        menus.getChildren().addAll(menu);
+        menus.getChildren().addAll(createMenuBar());
+
+        // Create Center Pane
         SplitPane splitPane = new SplitPane();
         rootFile = new File(System.getProperty("user.home"));
+
         try {
             ImageView imageView = new ImageView((new Image("/folder.png")));
             imageView.setFitHeight(10);
@@ -60,6 +71,8 @@ public class MainApplication extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        //Create Right Pane
         BorderPane rightPane = new BorderPane();
         rightPane.setPrefWidth(600);
         rightPane.setPadding(new Insets(10, 10, 10, 10));
@@ -78,9 +91,6 @@ public class MainApplication extends Application {
             preview = new ImageView(new Image("/folder.png"));
         }
 
-        fileChooser.setTitle("Choose a file");
-        fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("PNG", "*.png"));
-
         Button chooseFile = new Button("Choose a file");
         finalPreview = preview;
 
@@ -94,8 +104,82 @@ public class MainApplication extends Application {
             }
         });
 
+        Button submit = createSubmitButton(rightPane, chooseFile);
+
+        rightPane.setTop(new Label("Ändern Sie ein Icon oder laden Sie ein neues hoch"));
+        GridPane gridPane = new GridPane();
+        gridPane.gridLinesVisibleProperty().set(true);
+        gridPane.setPadding(new Insets(50, 10, 50, 10));
+        gridPane.add(preview, 0, 0);
+        gridPane.add(chooseFile, 1, 0);
+        GridPane usedGrid = generateUsedGrid(prevUsedFolders);
+        usedGrid.gridLinesVisibleProperty().set(true);
+        rightPane.setCenter(new VBox(gridPane, new ScrollPane(usedGrid)));
+        rightPane.setBottom(submit);
+
+        chooseFile.setOnAction(event -> {
+            fileChooser.setTitle("Choose a file");
+            fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("PNG", "*.png"));
+            List<File> file = fileChooser.showOpenMultipleDialog(primaryStage);
+            if (file != null) {
+                try {
+                    for (File f : file) {
+                        selectedImageFile = new Image(f.toURI().toURL().toString());
+                        finalPreview.setImage(selectedImageFile);
+                        prevUsedFolders.add(selectedImageFile);
+                    }
+                    usedGrid.getChildren().clear();
+                    usedGrid.getChildren().addAll(generateUsedGrid(prevUsedFolders));
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+        });
+        splitPane.getItems().addAll(treeView, scrollPane, rightPane);
+        BorderPane root = new BorderPane();
+        root.setTop(menus);
+        root.setCenter(splitPane);
+        return root;
+    }
+
+    private MenuBar createMenuBar() {
+        MenuBar menu = new MenuBar();
+        Menu menuFile = new Menu("File");
+        MenuItem menuItemOpen = new MenuItem("Open");
+        menuFile.getItems().add(menuItemOpen);
+        Menu menuHelp = new Menu("Help");
+        MenuItem about = new MenuItem("About");
+        about.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("About");
+            alert.setHeaderText("IconChanger");
+            alert.setContentText("""
+                    IconChanger is a simple program that allows you to change the icon of a folder.
+                                        
+                    Version: 1.0
+                    Author: Florian Groß
+                    """);
+            alert.showAndWait();
+        });
+        menuHelp.getItems().add(about);
+        menu.getMenus().addAll(menuFile, menuHelp);
+        menuItemOpen.setOnAction(event -> {
+            directoryChooser.setTitle("Open Folder");
+            File file = directoryChooser.showDialog(stage);
+            if (file != null) {
+                treeView.setRoot(new SimpleFileTreeItem(file));
+                centerPane.getChildren().clear();
+                centerPane.getChildren().addAll(generateGrid(file));
+            }
+        });
+        return menu;
+    }
+
+    private Button createSubmitButton(BorderPane rightPane, Button chooseFile) {
         Button submit = new Button("Submit");
         submit.setPrefWidth(rightPane.getPrefWidth());
+        submit.setPrefHeight(50);
         chooseFile.setPrefWidth(rightPane.getPrefWidth() / 2);
 
         submit.setOnAction(event -> {
@@ -119,54 +203,7 @@ public class MainApplication extends Application {
             centerPane.getChildren().clear();
             centerPane.getChildren().addAll(generateGrid(rootFile));
         });
-
-        rightPane.setTop(new Label("Ändern Sie ein Icon oder laden Sie ein neues hoch"));
-        GridPane gridPane = new GridPane();
-        gridPane.gridLinesVisibleProperty().set(true);
-        gridPane.setPadding(new Insets(50, 10, 50, 10));
-        gridPane.add(preview, 0, 0);
-        gridPane.add(chooseFile, 1, 0);
-        GridPane usedGrid = generateUsedGrid(prevUsedFolders);
-        usedGrid.gridLinesVisibleProperty().set(true);
-        rightPane.setCenter(new VBox(gridPane, new ScrollPane(usedGrid)));
-        rightPane.setBottom(submit);
-
-        menuItemOpen.setOnAction(event -> {
-            directoryChooser.setTitle("Open Folder");
-            File file = directoryChooser.showDialog(primaryStage);
-            if (file != null) {
-                treeView.setRoot(new SimpleFileTreeItem(file));
-                centerPane.getChildren().clear();
-                centerPane.getChildren().addAll(generateGrid(file));
-            }
-        });
-
-        chooseFile.setOnAction(event -> {
-            File file = fileChooser.showOpenDialog(primaryStage);
-            if (file != null) {
-                try {
-                    selectedImageFile = new Image(file.toURI().toURL().toString());
-                    finalPreview.setImage(selectedImageFile);
-                    prevUsedFolders.add(selectedImageFile);
-                    usedGrid.getChildren().clear();
-                    usedGrid.getChildren().addAll(generateUsedGrid(prevUsedFolders));
-                } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-        });
-        splitPane.getItems().addAll(treeView, scrollPane, rightPane);
-        BorderPane root = new BorderPane();
-        root.setTop(menus);
-        root.setCenter(splitPane);
-
-
-        Scene scene = new Scene(root, 1280, 960);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Icon Changer");
-        primaryStage.setResizable(true);
-        primaryStage.show();
+        return submit;
     }
 
     public static void setRoot(File file) {
