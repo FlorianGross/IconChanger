@@ -2,6 +2,7 @@ package com.floriang.iconchanger.iconchanger;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -9,7 +10,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import org.ini4j.Wini;
 
 import java.io.File;
@@ -27,6 +27,7 @@ public class MainApplication extends Application {
     public static TreeView<File> treeView;
     public static File rootFile;
 
+    private static GridPane usedGrid;
     private static FileChooser fileChooser;
     private static DirectoryChooser directoryChooser;
 
@@ -39,7 +40,7 @@ public class MainApplication extends Application {
     @Override
     public void start(javafx.stage.Stage primaryStage) {
         stage = primaryStage;
-        BorderPane root = createBody(primaryStage);
+        BorderPane root = createBody();
         Scene scene = new Scene(root, 1280, 960);
         primaryStage.setScene(scene);
         primaryStage.setTitle("IconChanger");
@@ -47,7 +48,7 @@ public class MainApplication extends Application {
         primaryStage.show();
     }
 
-    private BorderPane createBody(Stage primaryStage) {
+    private BorderPane createBody() {
         treeView = new TreeView<>();
         fileChooser = new FileChooser();
         directoryChooser = new DirectoryChooser();
@@ -90,8 +91,6 @@ public class MainApplication extends Application {
         } catch (Exception e) {
             preview = new ImageView(new Image("/folder.png"));
         }
-
-        Button chooseFile = new Button("Choose a file");
         finalPreview = preview;
 
         treeView.onMouseClickedProperty().set(event -> {
@@ -103,24 +102,11 @@ public class MainApplication extends Application {
                 setRoot(file);
             }
         });
-
-        Button submit = createSubmitButton(rightPane, chooseFile);
-
-        rightPane.setTop(new Label("Ändern Sie ein Icon oder laden Sie ein neues hoch"));
-        GridPane gridPane = new GridPane();
-        gridPane.gridLinesVisibleProperty().set(true);
-        gridPane.setPadding(new Insets(50, 10, 50, 10));
-        gridPane.add(preview, 0, 0);
-        gridPane.add(chooseFile, 1, 0);
-        GridPane usedGrid = generateUsedGrid(prevUsedFolders);
-        usedGrid.gridLinesVisibleProperty().set(true);
-        rightPane.setCenter(new VBox(gridPane, new ScrollPane(usedGrid)));
-        rightPane.setBottom(submit);
-
+        Button chooseFile = new Button("Choose a file");
         chooseFile.setOnAction(event -> {
             fileChooser.setTitle("Choose a file");
             fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("PNG", "*.png"));
-            List<File> file = fileChooser.showOpenMultipleDialog(primaryStage);
+            List<File> file = fileChooser.showOpenMultipleDialog(stage);
             if (file != null) {
                 try {
                     for (File f : file) {
@@ -136,6 +122,27 @@ public class MainApplication extends Application {
             }
 
         });
+
+        Button submit = createSubmitButton(rightPane, chooseFile);
+
+        Label topLabel = new Label("Edit");
+        topLabel.setFont(new javafx.scene.text.Font(40));
+        topLabel.setPadding(new Insets(10, 10, 0, 10));
+        Label subTopLabel = new Label("Select the folder you want to change the icon of");
+        VBox textBox = new VBox();
+        textBox.getChildren().addAll(topLabel, subTopLabel);
+        rightPane.setTop(textBox);
+        VBox centerBox = new VBox();
+        Label previewText = new Label("Selected Image:");
+        previewText.setPadding(new Insets(10, 10, 10, 10));
+        Label description = new Label("Previously selected Images:");
+        description.setPadding(new Insets(10, 10, 10, 10));
+        centerBox.getChildren().addAll(previewText, preview, chooseFile, description);
+        centerBox.setAlignment(Pos.CENTER);
+        usedGrid = generateUsedGrid(prevUsedFolders);
+        usedGrid.gridLinesVisibleProperty().set(true);
+        rightPane.setCenter(new VBox(centerBox, new ScrollPane(usedGrid)));
+        rightPane.setBottom(submit);
         splitPane.getItems().addAll(treeView, scrollPane, rightPane);
         BorderPane root = new BorderPane();
         root.setTop(menus);
