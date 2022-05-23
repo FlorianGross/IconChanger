@@ -52,6 +52,11 @@ public class SimpleFolderGridItem extends Pane {
                 setSelected(false);
                 MainApplication.selectedFolder.remove(file);
             }
+            if(event.getClickCount() == 2){
+                setSelected(false);
+                MainApplication.selectedFolder.clear();
+                MainApplication.setRoot(file);
+            }
         });
     }
 

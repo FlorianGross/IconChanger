@@ -2,7 +2,6 @@ package com.floriang.iconchanger.iconchanger;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -12,22 +11,22 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.ini4j.Wini;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class MainApplication extends Application {
     public static List<File> selectedFolder = new ArrayList<>();
     public static Map<File, Image> iconMap = new java.util.HashMap<>();
     public static List<Image> prevUsedFolders = new ArrayList<>();
     private ImageView finalPreview;
-
     public static Image selectedImageFile;
+
+    public static GridPane centerPane;
+    public static TreeView<File> treeView;
+
+    public static File rootFile;
 
     public static void main(String[] args) {
         launch(args);
@@ -35,7 +34,7 @@ public class MainApplication extends Application {
 
     @Override
     public void start(javafx.stage.Stage primaryStage) {
-        TreeView<File> treeView = new TreeView<>();
+        treeView = new TreeView<>();
         FileChooser fileChooser = new FileChooser();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         MenuBar menu = new MenuBar();
@@ -44,8 +43,6 @@ public class MainApplication extends Application {
         menuFile.getItems().add(menuItemOpen);
         Menu menuHelp = new Menu("Help");
         MenuItem about = new MenuItem("About");
-        File testFile;
-        GridPane centerPane;
         selectedImageFile = new Image("/folder.png");
 
         menuHelp.getItems().add(about);
@@ -54,19 +51,19 @@ public class MainApplication extends Application {
         VBox menus = new VBox();
         menus.getChildren().addAll(menu);
         SplitPane splitPane = new SplitPane();
-        testFile = new File(System.getProperty("user.home"));
+        rootFile = new File(System.getProperty("user.home"));
         try {
             ImageView imageView = new ImageView((new Image("/folder.png")));
             imageView.setFitHeight(10);
             imageView.setFitWidth(10);
-            treeView.setRoot(new SimpleFileTreeItem(testFile, imageView));
+            treeView.setRoot(new SimpleFileTreeItem(rootFile, imageView));
         } catch (Exception e) {
             e.printStackTrace();
         }
         BorderPane rightPane = new BorderPane();
         rightPane.setPrefWidth(600);
         rightPane.setPadding(new Insets(10, 10, 10, 10));
-        centerPane = generateGrid(testFile);
+        centerPane = generateGrid(rootFile);
         centerPane.gridLinesVisibleProperty().set(true);
         ScrollPane scrollPane = new ScrollPane(centerPane);
         scrollPane.setMinWidth(500);
@@ -90,11 +87,10 @@ public class MainApplication extends Application {
         treeView.onMouseClickedProperty().set(event -> {
             if (event.getClickCount() == 2) {
                 File file = treeView.getSelectionModel().getSelectedItem().getValue();
-                if (file.isDirectory()) {
-                    treeView.setRoot(new SimpleFileTreeItem(file, new ImageView((new Image("/folder.png")))));
-                    centerPane.getChildren().clear();
-                    centerPane.getChildren().add(generateGrid(file));
+                if (treeView.getSelectionModel().getSelectedItem().getValue().equals(rootFile)) {
+                    file = file.getParentFile();
                 }
+                setRoot(file);
             }
         });
 
@@ -121,7 +117,7 @@ public class MainApplication extends Application {
             }
             selectedFolder.clear();
             centerPane.getChildren().clear();
-            centerPane.getChildren().addAll(generateGrid(testFile));
+            centerPane.getChildren().addAll(generateGrid(rootFile));
         });
 
         rightPane.setTop(new Label("Ändern Sie ein Icon oder laden Sie ein neues hoch"));
@@ -132,7 +128,7 @@ public class MainApplication extends Application {
         gridPane.add(chooseFile, 1, 0);
         GridPane usedGrid = generateUsedGrid(prevUsedFolders);
         usedGrid.gridLinesVisibleProperty().set(true);
-        rightPane.setCenter(new VBox(gridPane, usedGrid));
+        rightPane.setCenter(new VBox(gridPane, new ScrollPane(usedGrid)));
         rightPane.setBottom(submit);
 
         menuItemOpen.setOnAction(event -> {
@@ -173,25 +169,36 @@ public class MainApplication extends Application {
         primaryStage.show();
     }
 
+    public static void setRoot(File file) {
+        if (file.isDirectory()) {
+            treeView.setRoot(new SimpleFileTreeItem(file, new ImageView((new Image("/folder.png")))));
+            centerPane.getChildren().clear();
+            centerPane.getChildren().add(generateGrid(file));
+        }
+    }
+
     private GridPane generateUsedGrid(List<Image> prevUsedFolders) {
         GridPane gridPane = new GridPane();
         int j = 0;
-        for (int i = 0; i < prevUsedFolders.size(); i++) {
-            Image imageFile = prevUsedFolders.get(i);
-            ImageView image = new ImageView(imageFile);
-            image.setFitWidth(100);
-            image.setFitHeight(100);
-            image.onMouseClickedProperty().set(event -> {
-                selectedImageFile = imageFile;
-                finalPreview.setImage(imageFile);
+        int it = 0;
+        for (Image image : prevUsedFolders) {
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(100);
+            imageView.setFitHeight(100);
+            imageView.onMouseClickedProperty().set(event -> {
+                selectedImageFile = image;
+                finalPreview.setImage(image);
             });
-            gridPane.add(image, i % 3, j);
+            gridPane.add(imageView, it++ % 3, j);
+            if (it % 3 == 0) {
+                j++;
+            }
         }
         gridPane.setGridLinesVisible(true);
         return gridPane;
     }
 
-    public GridPane generateGrid(File file) {
+    public static GridPane generateGrid(File file) {
         GridPane gridPane = new GridPane();
         if (file.isDirectory()) {
             File[] files = file.listFiles();
@@ -213,29 +220,31 @@ public class MainApplication extends Application {
         return gridPane;
     }
 
-    private Image getImage(File imageFile) {
+    private static Image getImage(File imageFile) {
         Image image;
         if (imageFile == null) {
-            image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+            image = new Image(Objects.requireNonNull(MainApplication.class.getResource("/folder.png")).toString());
         } else {
             try {
                 File iconImage = IconConverter.icoToPng(imageFile);
                 image = new Image(iconImage.toURI().toString());
             } catch (Exception e) {
-                image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
+                image = new Image(Objects.requireNonNull(MainApplication.class.getResource("/folder.png")).toString());
             }
         }
         return image;
     }
 
     public static File printFolderImagePath(File directory) {
-        Wini wini;
+        return getFile(directory);
+    }
+
+    static File getFile(File directory) {
         try {
             if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
-                wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
+                Wini wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
                 String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
-                File file = new File(path);
-                return file;
+                return new File(path);
             } else {
                 return null;
             }

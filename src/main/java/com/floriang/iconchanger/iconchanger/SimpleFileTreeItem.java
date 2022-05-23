@@ -1,7 +1,6 @@
 package com.floriang.iconchanger.iconchanger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 
 import javafx.collections.FXCollections;
@@ -10,7 +9,8 @@ import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.ini4j.Wini;
+
+import static com.floriang.iconchanger.iconchanger.MainApplication.getFile;
 
 /**
  * @author Alexander Bolte - Bolte Consulting (2010 - 2014).
@@ -28,13 +28,6 @@ import org.ini4j.Wini;
  */
 public class SimpleFileTreeItem extends TreeItem<File> {
 
-    /**
-     * Calling the constructor of super class in oder to create a new
-     * TreeItem<File>.
-     *
-     * @param f an object of type File from which a tree should be build or
-     *          which children should be gotten.
-     */
     public SimpleFileTreeItem(File f, Node image) {
         super(f, image);
         ImageView imageView = (ImageView) image;
@@ -81,16 +74,6 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         return isLeaf;
     }
 
-    /**
-     * Returning a collection of type ObservableList containing TreeItems, which
-     * represent all children available in handed TreeItem.
-     *
-     * @param TreeItem the root node from which children a collection of TreeItem
-     *                 should be created.
-     * @return an ObservableList<TreeItem<File>> containing TreeItems, which
-     * represent all children available in handed TreeItem. If the
-     * handed TreeItem is a leaf, an empty list is returned.
-     */
     private ObservableList<TreeItem<File>> buildChildren(TreeItem<File> TreeItem) {
         File f = TreeItem.getValue();
         if (f != null && f.isDirectory()) {
@@ -107,6 +90,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
                     } else {
                         try {
                             File iconImage = IconConverter.icoToPng(imageFile);
+                            assert iconImage != null;
                             image = new Image(iconImage.toURI().toString());
                         } catch (Exception e) {
                             image = new Image(Objects.requireNonNull(getClass().getResource("/folder.png")).toString());
@@ -123,19 +107,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     }
 
     private static File printFolderImagePath(File directory) {
-        Wini wini;
-        try {
-            if (new File(directory.getAbsolutePath() + "\\desktop.ini").exists()) {
-                wini = new Wini(new File(directory.getAbsolutePath() + "\\desktop.ini"));
-                String path = wini.get(".ShellClassInfo", "IconResource").split(",")[0];
-                File file = new File(path);
-                return file;
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            return null;
-        }
+        return getFile(directory);
     }
 
     private boolean isFirstTimeChildren = true;
