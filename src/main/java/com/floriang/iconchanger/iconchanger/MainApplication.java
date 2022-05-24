@@ -19,20 +19,21 @@ import java.util.*;
 
 public class MainApplication extends Application {
     public static List<File> selectedFolder = new ArrayList<>();
-    public static Map<File, Image> iconMap = new java.util.HashMap<>();
+    public static Map<File, Image> iconMap = new HashMap<>();
     public static List<Image> prevUsedFolders = new ArrayList<>();
     private ImageView finalPreview;
     public static File selectedImageFile;
     public static GridPane centerPane;
     public static TreeView<File> treeView;
     public static File rootFile;
-
     private static GridPane usedGrid;
     private static FileChooser fileChooser;
     private static DirectoryChooser directoryChooser;
 
     private static javafx.stage.Stage stage;
 
+    public static int width = 1280;
+    public static int height = 960;
     public static void main(String[] args) {
         launch(args);
     }
@@ -41,7 +42,7 @@ public class MainApplication extends Application {
     public void start(javafx.stage.Stage primaryStage) {
         stage = primaryStage;
         BorderPane root = createBody();
-        Scene scene = new Scene(root, 1280, 960);
+        Scene scene = new Scene(root, width, height);
         primaryStage.setScene(scene);
         primaryStage.setTitle("IconChanger");
         primaryStage.setResizable(true);
@@ -53,7 +54,6 @@ public class MainApplication extends Application {
         fileChooser = new FileChooser();
         directoryChooser = new DirectoryChooser();
         selectedImageFile = new File("/folder.png");
-        fileChooser = new FileChooser();
         directoryChooser = new DirectoryChooser();
 
         // Create Menu Pane
@@ -75,13 +75,15 @@ public class MainApplication extends Application {
 
         //Create Right Pane
         BorderPane rightPane = new BorderPane();
-        rightPane.setPrefWidth(600);
+        rightPane.setPrefWidth(width/3);
         rightPane.setPadding(new Insets(10, 10, 10, 10));
         centerPane = generateGrid(rootFile);
         centerPane.gridLinesVisibleProperty().set(true);
+        centerPane.setMaxWidth(360);
+        centerPane.setMinWidth(360);
         ScrollPane scrollPane = new ScrollPane(centerPane);
-        scrollPane.setMinWidth(500);
-        scrollPane.setMaxWidth(700);
+        scrollPane.setMinWidth(370);
+        scrollPane.setMaxWidth(370);
 
         ImageView preview;
         try {
@@ -105,7 +107,7 @@ public class MainApplication extends Application {
         Button chooseFile = new Button("Choose a file");
         chooseFile.setOnAction(event -> {
             fileChooser.setTitle("Choose a file");
-            fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("PNG", "*.png"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif"));
             List<File> file = fileChooser.showOpenMultipleDialog(stage);
             if (file != null) {
                 try {
@@ -191,10 +193,12 @@ public class MainApplication extends Application {
         chooseFile.setPrefWidth(rightPane.getPrefWidth() / 2);
 
         submit.setOnAction(event -> {
+            for (File folder: selectedFolder) {
             try {
-                writeDesktopIni(selectedFolder.get(0), IconConverter.pngToIco(selectedImageFile));
+                writeDesktopIni(folder, IconConverter.pngToIco(selectedImageFile));
             } catch (Exception e) {
                 e.printStackTrace();
+            }
             }
             ImageView iconImage = new ImageView(new Image(selectedImageFile.toURI().toString()));
             iconImage.setFitWidth(10);
@@ -215,6 +219,7 @@ public class MainApplication extends Application {
 
     public static void setRoot(File file) {
         if (file.isDirectory()) {
+            selectedFolder.clear();
             rootFile = file;
             treeView.setRoot(new SimpleFileTreeItem(file, new ImageView((new Image("/folder.png")))));
             centerPane.getChildren().clear();
@@ -228,8 +233,8 @@ public class MainApplication extends Application {
         int it = 0;
         for (Image image : prevUsedFolders) {
             ImageView imageView = new ImageView(image);
-            imageView.setFitWidth(100);
-            imageView.setFitHeight(100);
+            imageView.setFitWidth((width / 3) / 3);
+            imageView.setFitHeight(imageView.getFitWidth());
             imageView.onMouseClickedProperty().set(event -> {
                 selectedImageFile = new File(image.getUrl());
                 finalPreview.setImage(image);
@@ -272,7 +277,6 @@ public class MainApplication extends Application {
         } else {
             try {
                 File iconImage = IconConverter.icoToPng(imageFile);
-                assert iconImage != null;
                 image = new Image(iconImage.toURI().toString());
             } catch (Exception e) {
                 image = new Image(Objects.requireNonNull(MainApplication.class.getResource("/folder.png")).toString());
@@ -311,8 +315,8 @@ public class MainApplication extends Application {
                 String field = iconPath.getAbsolutePath() + ",0";
                 ini.put(".ShellClassInfo", "IconResource", field);
                 ini.store();
-                Process processCreateFile = Runtime.getRuntime().exec("attrib +h +s " + desktopIni.getAbsolutePath());
-                Process processCreateFolder = Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath());
+                Runtime.getRuntime().exec("attrib +h +s " + desktopIni.getAbsolutePath());
+                Runtime.getRuntime().exec("attrib -h +s " + directoryPath.getAbsolutePath());
                 System.out.println("Desktop.ini written: " + desktopIni.getAbsolutePath());
             }
         } catch (IOException ex) {

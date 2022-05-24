@@ -23,6 +23,8 @@ public class SimpleFolderGridItem extends Pane {
     public SimpleFolderGridItem(File file, Image image) {
         this.file = file;
         this.image = image;
+        prefWidth(100);
+        prefHeight(100);
         ImageView imageView;
         try {
             if (getImageFromIni(file) == null) {
@@ -39,6 +41,7 @@ public class SimpleFolderGridItem extends Pane {
         Label label = new Label();
         label.setGraphic(imageView);
         label.setText(file.getName());
+        label.setMaxWidth(100);
         label.setTextAlignment(TextAlignment.CENTER);
         label.setContentDisplay(ContentDisplay.TOP);
         getChildren().add(label);

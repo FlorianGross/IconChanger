@@ -16,11 +16,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
         ImageView imageView = (ImageView) image;
         imageView.setFitHeight(10);
         imageView.setFitWidth(10);
-        if (f.equals(MainApplication.rootFile)) {
-            setExpanded(true);
-        } else {
-            setExpanded(false);
-        }
+        setExpanded(f.equals(MainApplication.rootFile));
     }
 
     public SimpleFileTreeItem(File f) {
