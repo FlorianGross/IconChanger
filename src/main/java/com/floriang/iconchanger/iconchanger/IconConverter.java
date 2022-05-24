@@ -1,10 +1,10 @@
 package com.floriang.iconchanger.iconchanger;
 
-import net.sf.image4j.codec.ico.ICODecoder;
-import net.sf.image4j.codec.ico.ICOEncoder;
+//import net.sf.image4j.codec.ico.ICODecoder;
+//import net.sf.image4j.codec.ico.ICOEncoder;
 
-//import net.ifok.image.image4j.codec.ico.ICODecoder;
-//import net.ifok.image.image4j.codec.ico.ICOEncoder;
+import net.ifok.image.image4j.codec.ico.ICODecoder;
+import net.ifok.image.image4j.codec.ico.ICOEncoder;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-//https://zetcode.com/articles/javaico/
 public class IconConverter {
     public static String iconDIr = System.getProperty("user.home") + "\\Pictures\\";
 
